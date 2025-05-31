@@ -1,0 +1,38 @@
+
+==> Audit <==
+|------------|-------------------------|----------|---------------|---------|---------------------|---------------------|
+|  Command   |          Args           | Profile  |     User      | Version |     Start Time      |      End Time       |
+|------------|-------------------------|----------|---------------|---------|---------------------|---------------------|
+| start      | --driver=docker --force | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 09:55 IST | 06 May 25 10:00 IST |
+| docker-env |                         | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:01 IST | 06 May 25 10:01 IST |
+| docker-env |                         | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:25 IST | 06 May 25 10:25 IST |
+| stop       |                         | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:28 IST | 06 May 25 10:28 IST |
+| delete     |                         | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:28 IST | 06 May 25 10:28 IST |
+| start      |                         | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:28 IST | 06 May 25 10:30 IST |
+| start      | --driver=docker         | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:30 IST | 06 May 25 10:31 IST |
+| addons     | enable metrics-server   | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:31 IST | 06 May 25 10:31 IST |
+| addons     | enable metrics-server   | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:31 IST | 06 May 25 10:31 IST |
+| docker-env |                         | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:32 IST | 06 May 25 10:32 IST |
+| start      | --driver=docker         | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:45 IST | 06 May 25 10:46 IST |
+| addons     | enable metrics-server   | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:46 IST | 06 May 25 10:46 IST |
+| docker-env |                         | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:46 IST | 06 May 25 10:46 IST |
+| addons     | enable metrics-server   | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:55 IST | 06 May 25 10:55 IST |
+| addons     | enable metrics-server   | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:56 IST | 06 May 25 10:56 IST |
+| addons     | enable metrics-server   | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:56 IST | 06 May 25 10:56 IST |
+| addons     | enable metrics-server   | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:56 IST | 06 May 25 10:56 IST |
+| service    | result-app              | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:57 IST |                     |
+| service    | voting-app              | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 10:57 IST |                     |
+| service    | result-app              | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 11:18 IST | 06 May 25 11:20 IST |
+| service    | voting-app              | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 11:19 IST |                     |
+| service    | result-app              | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 11:20 IST |                     |
+| addons     | enable prometheus       | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 11:39 IST |                     |
+| addons     | enable grafana          | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 11:39 IST |                     |
+| addons     | enable grafana          | minikube | ANIRUDH\aniru | v1.35.0 | 06 May 25 11:39 IST |                     |
+|------------|-------------------------|----------|---------------|---------|---------------------|---------------------|
+
+
+==> Last Start <==
+Log file created at: 2025/05/06 10:45:20
+Running on machine: Anirudh
+Binary: Built with gc go1.23.4 for windows/amd64
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg

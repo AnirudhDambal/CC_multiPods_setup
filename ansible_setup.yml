@@ -1,0 +1,103 @@
+---
+- name: Setup local environment
+  hosts: localhost
+  become: yes
+
+  vars:
+    postgres_container_name: postgres
+    postgres_image: postgres:13
+    postgres_env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: votes
+    postgres_volume: postgres_data
+    vote_net: vote-net
+
+    # Absolute paths for WSL compatibility
+    #change mad le ille path nind hak
+    voting_app_path: "/mnt/c/Users/aniru/OneDrive/Desktop/CC_multiPods_setup-main/web-app/voting-app"
+    result_app_path: "/mnt/c/Users/aniru/OneDrive/Desktop/CC_multiPods_setup-main/web-app/result-app"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - docker.io
+          - python3-pip
+        state: present
+
+    - name: Install Docker SDK for Python with workaround for Python 3.12
+      command: python3 -m pip install docker --break-system-packages
+      args:
+        creates: /usr/local/lib/python3.12/dist-packages/docker
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create Docker volume for Postgres
+      docker_volume:
+        name: "{{ postgres_volume }}"
+
+    - name: Create custom Docker network
+      docker_network:
+        name: "{{ vote_net }}"
+        state: present
+
+    # FIXED: Added source: build parameter
+    - name: Build voting-app Docker image
+      docker_image:
+        name: voting-app
+        source: build  # CRITICAL FIX
+        build:
+          path: "{{ voting_app_path }}"
+
+    # FIXED: Added source: build parameter
+    - name: Build result-app Docker image
+      docker_image:
+        name: result-app
+        source: build  # CRITICAL FIX
+        build:
+          path: "{{ result_app_path }}"
+
+    - name: Run postgres container
+      docker_container:
+        name: "{{ postgres_container_name }}"
+        image: "{{ postgres_image }}"
+        state: started
+        restart_policy: always
+        env: "{{ postgres_env }}"
+        ports:
+          - "5432:5432"
+        volumes:
+          - "{{ postgres_volume }}:/var/lib/postgresql/data"
+        networks:
+          - name: "{{ vote_net }}"
+
+    - name: Run voting-app container
+      docker_container:
+        name: voting-app
+        image: voting-app
+        state: started
+        restart_policy: always
+        ports:
+          - "5000:5000"
+        networks:
+          - name: "{{ vote_net }}"
+
+    - name: Run result-app container
+      docker_container:
+        name: result-app
+        image: result-app
+        state: started
+        restart_policy: always
+        ports:
+          - "5001:5001"
+        networks:
+          - name: "{{ vote_net }}"
