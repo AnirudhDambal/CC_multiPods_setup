@@ -6,7 +6,7 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - db
+      - postgres
     environment:
       - FLASK_ENV=development
 
@@ -15,11 +15,11 @@ services:
     ports:
       - "5001:5001"
     depends_on:
-      - db
+      - postgres
     environment:
       - FLASK_ENV=development
 
-  db:
+  postgres:  # 👈 changed from 'db' to 'postgres'
     image: postgres:13
     environment:
       - POSTGRES_USER=postgres

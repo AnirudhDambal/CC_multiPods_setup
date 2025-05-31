@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template_string
 import psycopg2
 import time
 import os
@@ -16,11 +16,44 @@ DB_PORT = os.getenv('DB_PORT', '5432')
 # Connection pool
 connection_pool = None
 
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voting Results</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin-top: 40px; text-align: center; }
+        table { margin: 0 auto; border-collapse: collapse; font-size: 18px; }
+        th, td { padding: 10px 20px; border: 1px solid #ccc; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Live Voting Results</h1>
+    {% if results %}
+    <table>
+        <tr>
+            <th>Candidate</th>
+            <th>Votes</th>
+        </tr>
+        {% for candidate, votes in results.items() %}
+        <tr>
+            <td>{{ candidate }}</td>
+            <td>{{ votes }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No votes recorded yet.</p>
+    {% endif %}
+</body>
+</html>
+"""
+
 def initialize_db_connection_pool():
     global connection_pool
     max_retries = 5
     retry_delay = 2
-    
     for attempt in range(max_retries):
         try:
             connection_pool = psycopg2.pool.SimpleConnectionPool(
@@ -46,30 +79,22 @@ def get_db_connection():
 def release_db_connection(conn):
     connection_pool.putconn(conn)
 
-def initialize_db_schema():
+@app.route('/')
+def home():
     conn = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS votes (
-                id SERIAL PRIMARY KEY,
-                candidate VARCHAR(255) NOT NULL,
-                voted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        conn.commit()
-        print("Database schema initialized successfully")
+        cur.execute("SELECT candidate, COUNT(*) FROM votes GROUP BY candidate")
+        rows = cur.fetchall()
+        results = {candidate: count for candidate, count in rows}
+        return render_template_string(HTML_TEMPLATE, results=results)
     except Exception as e:
-        print(f"Error initializing database schema: {str(e)}")
-        raise
+        app.logger.error(f"Error rendering results page: {str(e)}")
+        return "<h2>Internal Server Error</h2>", 500
     finally:
         if conn:
             release_db_connection(conn)
-
-@app.route('/')
-def home():
-    return "Result App Service - GET results from /results"
 
 @app.route('/favicon.ico')
 def favicon():
@@ -95,9 +120,7 @@ def results():
 if __name__ == '__main__':
     print("Initializing database connection pool...")
     initialize_db_connection_pool()
-    
-    print("Initializing database schema...")
-    initialize_db_schema()
-    
+
+    # Schema initialization is skipped here intentionally to avoid conflict
     print("Starting result app...")
-    app.run(host='0.0.0.0', port=5001, debug=False)  # debug=False in production
+    app.run(host='0.0.0.0', port=5001, debug=False)
