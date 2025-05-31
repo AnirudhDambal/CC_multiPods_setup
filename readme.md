@@ -100,5 +100,5 @@ The project includes two shell scripts for testing:
   - Secure database access
 
 
-  ##ansible 
+### Option 3:ansible (Development) 
   ansible-playbook -i hosts.ini ansible_setup.yml -K
