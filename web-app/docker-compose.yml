@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  voting-app:
+    build: ./voting-app
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=votes
+      - DB_USER=postgres
+      - DB_PASS=postgres
+    depends_on:
+      - postgres
+
+  result-app:
+    build: ./result-app
+    ports:
+      - "5001:5001"
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=votes
+      - DB_USER=postgres
+      - DB_PASS=postgres
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=votes
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  nginx:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - voting-app
+      - result-app
+
+volumes:
+  postgres_data:

@@ -1,0 +1,159 @@
+---
+- name: Setup local environment
+  hosts: localhost
+  become: yes
+
+  vars:
+    postgres_container_name: postgres
+    postgres_image: postgres:13
+    postgres_env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: votes
+    postgres_volume: postgres_data
+    vote_net: vote-net
+
+    # Absolute paths for WSL compatibility
+    voting_app_path: "/mnt/c/Users/aniru/OneDrive/Desktop/CC_multiPods_setup-main/web-app/voting-app"
+    result_app_path: "/mnt/c/Users/aniru/OneDrive/Desktop/CC_multiPods_setup-main/web-app/result-app"
+
+    # Firewall ports to allow
+    firewall_ports:
+      - 5432   # Postgres
+      - 5000   # voting-app
+      - 5001   # result-app
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - docker.io
+          - python3-pip
+          - apache2-utils  # For Apache Benchmark (ab)
+        state: present
+
+    - name: Install Docker SDK for Python with workaround for Python 3.12
+      command: python3 -m pip install docker --break-system-packages
+      args:
+        creates: /usr/local/lib/python3.12/dist-packages/docker
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create Docker volume for Postgres
+      docker_volume:
+        name: "{{ postgres_volume }}"
+
+    - name: Create custom Docker network
+      docker_network:
+        name: "{{ vote_net }}"
+        state: present
+
+    - name: Build voting-app Docker image
+      docker_image:
+        name: voting-app
+        source: build
+        build:
+          path: "{{ voting_app_path }}"
+
+    - name: Build result-app Docker image
+      docker_image:
+        name: result-app
+        source: build
+        build:
+          path: "{{ result_app_path }}"
+
+    - name: Run postgres container
+      docker_container:
+        name: "{{ postgres_container_name }}"
+        image: "{{ postgres_image }}"
+        state: started
+        restart_policy: always
+        env: "{{ postgres_env }}"
+        ports:
+          - "5432:5432"
+        volumes:
+          - "{{ postgres_volume }}:/var/lib/postgresql/data"
+        networks:
+          - name: "{{ vote_net }}"
+
+    - name: Run voting-app container
+      docker_container:
+        name: voting-app
+        image: voting-app
+        state: started
+        restart_policy: always
+        ports:
+          - "5000:5000"
+        networks:
+          - name: "{{ vote_net }}"
+
+    - name: Run result-app container
+      docker_container:
+        name: result-app
+        image: result-app
+        state: started
+        restart_policy: always
+        ports:
+          - "5001:5001"
+        networks:
+          - name: "{{ vote_net }}"
+
+    - name: Test voting-app endpoint
+      uri:
+        url: http://127.0.0.1:5000/
+        return_content: yes
+      register: voting_response
+
+    - name: Show voting-app response
+      debug:
+        var: voting_response.content
+
+    - name: Test result-app endpoint
+      uri:
+        url: http://127.0.0.1:5001/
+        return_content: yes
+      register: result_response
+
+    - name: Show result-app response
+      debug:
+        var: result_response.content
+
+    - name: Benchmark voting-app with Apache Benchmark
+      shell: ab -n 1000 -c 50 http://127.0.0.1:5000/
+      register: voting_benchmark
+
+    - name: Show voting-app benchmark results
+      debug:
+        var: voting_benchmark.stdout
+
+    - name: Benchmark result-app with Apache Benchmark
+      shell: ab -n 1000 -c 50 http://127.0.0.1:5001/
+      register: result_benchmark
+
+    - name: Show result-app benchmark results
+      debug:
+        var: result_benchmark.stdout
+
+    - name: Fetch logs from voting-app container
+      shell: docker logs voting-app
+      register: voting_logs
+
+    - name: Show voting-app logs
+      debug:
+        var: voting_logs.stdout
+
+    - name: Fetch logs from result-app container
+      shell: docker logs result-app
+      register: result_logs
+
+    - name: Show result-app logs
+      debug:
+        var: result_logs.stdout
